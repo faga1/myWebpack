@@ -26,6 +26,19 @@ module.exports = class compiler{
     }
     buildModule(modulePath){
         const originCode = fs.readFileSync(`../example/src/${modulePath}`,'utf-8')
-        return originCode;
+        const completedCode = this.loadLoader(modulePath,originCode)
+        return completedCode;
+    }
+    loadLoader(moduleName,code){
+        const rules = this.options.module.rules;
+        rules.forEach(rule => {
+            if(rule.test.test(moduleName)){
+                rule.include.forEach(loaderPath => {
+                    const loader = require(`../loader/${loaderPath}`)
+                    code = loader(code)
+                })
+            }
+        })
+        return code
     }
 }

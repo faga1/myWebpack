@@ -3,8 +3,8 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.css?$/,
-                include:['../../loader/cssloader.js']
+                test: /\.js$/,
+                include:['loader1.js']
             }
         ]
     },
