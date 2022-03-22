@@ -19,9 +19,13 @@ module.exports = class compiler{
     buildExport(){
         this.options.entry.forEach(item=>{
             let entryObj={}
-            entryObj.code = fs.readFileSync(`../example/src/${item}`)
+            entryObj.code = this.buildModule(item)
             entryObj.name = item;
             this.entry.push(entryObj)
         })
+    }
+    buildModule(modulePath){
+        const originCode = fs.readFileSync(`../example/src/${modulePath}`,'utf-8')
+        return originCode;
     }
 }
