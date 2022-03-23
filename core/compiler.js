@@ -17,20 +17,21 @@ module.exports = class compiler{
         this.module = new Set()
         this.chunk = new Set()
         this.alreadyModule = new Set()
+        this.assets = {}
+        this.files = new Set()
     }
     run(){
         this.hooks.run.call()
         this.buildEntry()
         this.buildChunk()
+        this.exportFile()
         console.log('entries',this.entry);
         console.log('chunk',this.chunk);
     }
     buildEntry(){
         this.options.entry.forEach(item=>{
             let entryObj= this.buildModule(item,this.rootPath+item)
-            if(!path.isAbsolute(item)){
-                entryObj.path = unixPath(path.join(this.rootPath,item))
-            }
+
             entryObj.name = item.replace(/\.js$/g,'')
             this.entry.add(entryObj)
         })
@@ -47,6 +48,7 @@ module.exports = class compiler{
         const ast = parser.parse(code)
         const module = {
             name:moduleName,
+            id:modulePath,
             dependenices:new Set()
         }
         traverse(ast,{
@@ -83,38 +85,80 @@ module.exports = class compiler{
             const chunk ={
                 name:entry[0].name,
                 dependenices:entry[0].dependenices,
+                id:entry[0].id,
                 _source:entry[0]._source,
-                module:new Set()
+                modules:[]
             }
-            this.addMoudle(chunk.dependenices,chunk.module)
+            this.addMoudle(chunk.dependenices,chunk.modules)
             this.chunk.add(chunk)
         }
     }
-    addMoudle(dep,set){
-        console.log(dep);
+    addMoudle(dep,arr){
         const iterator = dep.entries()
         for(const module of iterator){
             if(module[0].dependenices.size){
-                this.addMoudle(module[0].dependenices,set)
+                this.addMoudle(module[0].dependenices,arr)
             }
-            set.add(module)
+            arr.push(module)
         }
     }
     exportFile(){
         const iterator = this.chunk.entries()
-        if(this.options.output&&this.options.optput.length){
-
-        }
         for(const chunk of iterator){
-            fs.writeSync(`${this.rootPath}output[${entry.name}]`,getSourceModule(entry))
+            this.assets[chunk[0].name] = this.getSourceModule(chunk[0])
+            console.log(this.assets);
         }
+        this.hooks.emit.call()  
+        Object.keys(this.assets).forEach(item=>{
+            this.files.add(item)
+            fs.writeFileSync(`${this.rootPath}output[${item}].js`,this.assets[item])
+        })
     }
-    getSourceModule(entry){
-        const {name,dependenices,_source,path} = entry
+    getSourceModule(chunk){
+        const {name,dependenices,_source,path,modules} = chunk
         return `
+        (() => {
+            var __webpack_modules__ = {
+              ${modules
+                .map((module) => {
+                  return `
+                  '${module.id}': (module) => {
+                    ${module._source}
+              }
+                `;
+                })
+                .join(',')}
+            };
+            // The module cache
+            var __webpack_module_cache__ = {};
+        
+            // The require function
+            function __webpack_require__(moduleId) {
+              // Check if module is in cache
+              var cachedModule = __webpack_module_cache__[moduleId];
+              if (cachedModule !== undefined) {
+                return cachedModule.exports;
+              }
+              // Create a new module (and put it into the cache)
+              var module = (__webpack_module_cache__[moduleId] = {
+                // no module.id needed
+                // no module.loaded needed
+                exports: {},
+              });
+        
+              // Execute the module function
+              __webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+        
+              // Return the exports of the module
+              return module.exports;
+            }
+        
+            var __webpack_exports__ = {};
+            // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
             (() => {
-
-            })
+              ${_source}
+            })();
+          })();
         `
     }
 }
