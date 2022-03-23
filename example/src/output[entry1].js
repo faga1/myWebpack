@@ -2,12 +2,15 @@
         (() => {
             var __webpack_modules__ = {
               
-                  'undefined': (module) => {
-                    undefined
+                  'E:/项目/myWebpack/example/src/module2.js': (module) => {
+                    module.exports = {
+    b:2
+}completed by loader1
               }
                 ,
-                  'undefined': (module) => {
-                    undefined
+                  'E:/项目/myWebpack/example/src/module1.js': (module) => {
+                    const module2 = require('./module2.js')
+module.exports = {a:1,...module2}completed by loader1
               }
                 
             };

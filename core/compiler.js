@@ -25,8 +25,6 @@ module.exports = class compiler{
         this.buildEntry()
         this.buildChunk()
         this.exportFile()
-        console.log('entries',this.entry);
-        console.log('chunk',this.chunk);
     }
     buildEntry(){
         this.options.entry.forEach(item=>{
@@ -99,14 +97,14 @@ module.exports = class compiler{
             if(module[0].dependenices.size){
                 this.addMoudle(module[0].dependenices,arr)
             }
-            arr.push(module)
+            arr.push(module[0])
         }
     }
     exportFile(){
         const iterator = this.chunk.entries()
         for(const chunk of iterator){
             this.assets[chunk[0].name] = this.getSourceModule(chunk[0])
-            console.log(this.assets);
+            
         }
         this.hooks.emit.call()  
         Object.keys(this.assets).forEach(item=>{
@@ -115,6 +113,7 @@ module.exports = class compiler{
         })
     }
     getSourceModule(chunk){
+        console.log(chunk);
         const {name,dependenices,_source,path,modules} = chunk
         return `
         (() => {
