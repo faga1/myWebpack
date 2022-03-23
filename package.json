@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@babel/parser": "^7.17.8",
+    "@babel/traverse": "^7.17.3",
     "tapable": "^2.2.1"
   }
 }
