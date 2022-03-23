@@ -109,7 +109,8 @@ module.exports = class compiler{
         this.hooks.emit.call()  
         Object.keys(this.assets).forEach(item=>{
             this.files.add(item)
-            fs.writeFileSync(`${this.rootPath}output[${item}].js`,this.assets[item])
+            if(!fs.readdirSync(`${this.rootPath}/dist`)) fs.mkdirSync(`${this.rootPath}/dist`)
+            fs.writeFileSync(`${this.rootPath}dist/output[${item}].js`,this.assets[item])
         })
     }
     getSourceModule(chunk){
