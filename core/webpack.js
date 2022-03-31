@@ -3,6 +3,7 @@ const fs = require('fs')
 const options = require('../example/src/webpack.config')
 const compiler = require('./compiler.js')
 module.exports = function webpack(){
+    process.cwd()
     let instance = new compiler(options)
     loadPlugin(instance)
     instance.run()

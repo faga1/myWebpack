@@ -12,7 +12,7 @@ module.exports = class compiler{
             emit: new SyncHook(),
             done: new SyncHook()
         }
-        this.rootPath = options.context || unixPath(process.cwd())
+        this.rootPath = unixPath(options.context)+'/' || unixPath(process.cwd())
         this.entry = new Set()
         this.module = new Set()
         this.chunk = new Set()
@@ -107,15 +107,31 @@ module.exports = class compiler{
             
         }
         this.hooks.emit.call()  
-        Object.keys(this.assets).forEach(item=>{
-            this.files.add(item)
-            if(!fs.readdirSync(`${this.rootPath}/dist`)) fs.mkdirSync(`${this.rootPath}/dist`)
-            fs.writeFileSync(`${this.rootPath}dist/output[${item}].js`,this.assets[item])
+        let keyArr=Object.keys(this.assets)
+        for(let i=0;i<keyArr.length;i++){
+            this.writeFile(keyArr[i])
+        }
+    }
+    isDirExist(path){
+        return new Promise((resolve)=>{
+            fs.access(path,(err)=>{
+                if(err){
+                    resolve(false)
+                }else{
+                    resolve(true)
+                }
+            })
         })
     }
+    async writeFile(assetKey){
+        this.files.add(this.assets[assetKey])
+        console.log(this.assets[assetKey]);
+        const exist = await this.isDirExist(`${this.rootPath}dist`)
+        if(!exist) fs.mkdirSync(`${this.rootPath}dist`)
+        fs.writeFileSync(`${this.rootPath}dist/output[${assetKey}].js`,this.assets[assetKey])
+    }
     getSourceModule(chunk){
-        console.log(chunk);
-        const {name,dependenices,_source,path,modules} = chunk
+        const {_source,modules} = chunk
         return `
         (() => {
             var __webpack_modules__ = {
